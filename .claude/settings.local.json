@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "Bash(npx vite *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "Bash(curl -sI http://localhost:5173)",
+      "Bash(curl *)",
+      "Bash(awk '{print $2}')",
+      "Bash(pkill -f vite)",
+      "Bash(pkill -f \"vite\")",
+      "Bash(node -e \"const l = require\\('lucide-react'\\); console.log\\(Object.keys\\(l\\).filter\\(k => k.toLowerCase\\(\\).includes\\('git'\\)\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(npx -y node -e \"import\\('lucide-react'\\).then\\(m => console.log\\(Object.keys\\(m\\).filter\\(k => k.toLowerCase\\(\\).includes\\('git'\\)\\).join\\('\\\\n'\\)\\)\\)\")",
+      "Bash(node *)"
+    ]
+  }
+}
