@@ -15,6 +15,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const isHome = location.pathname === '/';
+  const showSolidBackground = scrolled || !isHome;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -39,9 +41,9 @@ export default function Navbar() {
         zIndex: 1000,
         padding: '0 24px',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        background: scrolled ? 'rgba(10, 10, 15, 0.85)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
+        background: showSolidBackground ? 'rgba(10, 10, 15, 0.88)' : 'transparent',
+        backdropFilter: showSolidBackground ? 'blur(20px)' : 'none',
+        borderBottom: showSolidBackground ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
       }}
     >
       <div style={{
@@ -118,7 +120,15 @@ export default function Navbar() {
         <button
           className="mobile-toggle"
           onClick={() => setMobileOpen(!mobileOpen)}
-          style={{ display: 'none', padding: 8 }}
+          aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          style={{
+            display: 'none',
+            padding: 8,
+            borderRadius: 10,
+            background: 'rgba(255, 255, 255, 0.06)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            color: 'var(--text-primary)',
+          }}
         >
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
