@@ -14,6 +14,10 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= 768;
+  });
   const location = useLocation();
   const isHome = location.pathname === '/';
   const showSolidBackground = scrolled || !isHome;
@@ -22,6 +26,13 @@ export default function Navbar() {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', onResize);
+    onResize();
+    return () => window.removeEventListener('resize', onResize);
   }, []);
 
   useEffect(() => {
@@ -73,65 +84,64 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 32,
-        }}
-          className="desktop-nav"
-        >
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              style={{
-                fontSize: '0.9rem',
-                fontWeight: 500,
-                color: location.pathname === link.path ? '#a29bfe' : '#a0a0b8',
-                transition: '0.2s',
-                position: 'relative',
-              }}
-              onMouseEnter={(e) => e.target.style.color = '#f0f0f5'}
-              onMouseLeave={(e) => e.target.style.color = location.pathname === link.path ? '#a29bfe' : '#a0a0b8'}
-            >
-              {link.label}
-              {location.pathname === link.path && (
-                <motion.div
-                  layoutId="nav-indicator"
-                  style={{
-                    position: 'absolute',
-                    bottom: -4,
-                    left: 0,
-                    right: 0,
-                    height: 2,
-                    background: '#6c5ce7',
-                    borderRadius: 1,
-                  }}
-                />
-              )}
+        {!isMobile && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 32,
+          }}>
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                style={{
+                  fontSize: '0.9rem',
+                  fontWeight: 500,
+                  color: location.pathname === link.path ? '#a29bfe' : '#a0a0b8',
+                  transition: '0.2s',
+                  position: 'relative',
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#f0f0f5'}
+                onMouseLeave={(e) => e.target.style.color = location.pathname === link.path ? '#a29bfe' : '#a0a0b8'}
+              >
+                {link.label}
+                {location.pathname === link.path && (
+                  <motion.div
+                    layoutId="nav-indicator"
+                    style={{
+                      position: 'absolute',
+                      bottom: -4,
+                      left: 0,
+                      right: 0,
+                      height: 2,
+                      background: '#6c5ce7',
+                      borderRadius: 1,
+                    }}
+                  />
+                )}
+              </Link>
+            ))}
+            <Link to="/contact" className="btn btn-primary" style={{ padding: '10px 22px', fontSize: '0.85rem' }}>
+              Hire Us
             </Link>
-          ))}
-          <Link to="/contact" className="btn btn-primary" style={{ padding: '10px 22px', fontSize: '0.85rem' }}>
-            Hire Us
-          </Link>
-        </div>
+          </div>
+        )}
 
-        {/* Mobile toggle */}
-        <button
-          className="mobile-toggle"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
-          style={{
-            display: 'none',
-            padding: 8,
-            borderRadius: 10,
-            background: 'rgba(255, 255, 255, 0.06)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            color: 'var(--text-primary)',
-          }}
-        >
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        {isMobile && (
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            style={{
+              padding: 8,
+              borderRadius: 10,
+              background: 'rgba(255, 255, 255, 0.06)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: 'var(--text-primary)',
+            }}
+          >
+            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        )}
       </div>
 
       {/* Mobile menu */}
@@ -178,13 +188,6 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <style>{`
-        @media (max-width: 768px) {
-          .desktop-nav { display: none !important; }
-          .mobile-toggle { display: block !important; }
-        }
-      `}</style>
     </motion.nav>
   );
 }
