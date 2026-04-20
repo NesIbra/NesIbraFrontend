@@ -1,13 +1,70 @@
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
-import { projects } from '../data/mockData';
+import { ArrowLeft } from 'lucide-react';
+import { api } from '../api/client';
 
 export default function ProjectDetail() {
   const { id } = useParams();
-  const project = projects.find((p) => p.id === id);
+  const [state, setState] = useState({
+    project: null,
+    loading: true,
+    notFound: false,
+    requestedId: id,
+  });
 
-  if (!project) {
+  useEffect(() => {
+    let active = true;
+
+    api.getProject(id)
+      .then((data) => {
+        if (!active) return;
+
+        setState({
+          project: data,
+          loading: false,
+          notFound: false,
+          requestedId: id,
+        });
+      })
+      .catch((error) => {
+        if (!active) return;
+
+        if (error.message === 'Project not found') {
+          setState({
+            project: null,
+            loading: false,
+            notFound: true,
+            requestedId: id,
+          });
+          return;
+        }
+
+        console.error('Failed to load project:', error);
+        setState({
+          project: null,
+          loading: false,
+          notFound: false,
+          requestedId: id,
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  if (state.requestedId !== id || state.loading) {
+    return (
+      <div className="page-header" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="container" style={{ textAlign: 'center' }}>
+          <h1 className="section-title">Loading Project</h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (state.notFound || !state.project) {
     return (
       <div className="page-header" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="container" style={{ textAlign: 'center' }}>
@@ -19,6 +76,8 @@ export default function ProjectDetail() {
       </div>
     );
   }
+
+  const { project } = state;
 
   return (
     <>

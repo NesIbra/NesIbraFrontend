@@ -1,12 +1,34 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Filter } from 'lucide-react';
-import { projects } from '../data/mockData';
+import { api } from '../api/client';
 
 export default function Projects() {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+
+  useEffect(() => {
+    let active = true;
+
+    api.getProjects()
+      .then((data) => {
+        if (!active) return;
+        setProjects(data);
+      })
+      .catch((error) => {
+        console.error('Failed to load projects:', error);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const categories = ['All', ...new Set(projects.map((p) => p.category))];
 
@@ -18,7 +40,7 @@ export default function Projects() {
         p.tech_stack.some((t) => t.toLowerCase().includes(search.toLowerCase()));
       return matchCategory && matchSearch;
     });
-  }, [search, activeCategory]);
+  }, [projects, search, activeCategory]);
 
   return (
     <>
@@ -105,69 +127,77 @@ export default function Projects() {
           </motion.div>
 
           {/* Project Grid */}
-          <div className="grid-3">
-            {filtered.map((project, i) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08, duration: 0.5 }}
-                layout
-              >
-                <Link to={`/projects/${project.id}`} className="glass-card" style={{
-                  display: 'block',
-                  overflow: 'hidden',
-                  height: '100%',
-                }}>
-                  <div style={{ height: 200, overflow: 'hidden' }}>
-                    <img
-                      src={project.image_url}
-                      alt={project.title}
-                      loading="lazy"
-                      style={{
-                        width: '100%', height: '100%', objectFit: 'cover',
-                        transition: '0.5s',
-                      }}
-                      onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-                      onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-                    />
-                  </div>
-                  <div style={{ padding: 24 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                      <span className="tag">{project.category}</span>
-                      {project.featured && (
-                        <span style={{ fontSize: '0.72rem', color: 'var(--success)', fontWeight: 600 }}>
-                          Featured
-                        </span>
-                      )}
-                    </div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 8 }}>
-                      {project.title}
-                    </h3>
-                    <p style={{
-                      color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.6,
-                      marginBottom: 16,
-                      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                    }}>
-                      {project.description}
-                    </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {project.tech_stack.map((tech) => (
-                        <span key={tech} style={{
-                          padding: '3px 10px', fontSize: '0.72rem', borderRadius: 6,
-                          background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)',
-                        }}>
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+          {loading && (
+            <div className="glass-card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-secondary)' }}>
+              Loading projects...
+            </div>
+          )}
 
-          {filtered.length === 0 && (
+          {!loading && (
+            <div className="grid-3">
+              {filtered.map((project, i) => (
+                <motion.div
+                  key={project.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08, duration: 0.5 }}
+                  layout
+                >
+                  <Link to={`/projects/${project.id}`} className="glass-card" style={{
+                    display: 'block',
+                    overflow: 'hidden',
+                    height: '100%',
+                  }}>
+                    <div style={{ height: 200, overflow: 'hidden' }}>
+                      <img
+                        src={project.image_url}
+                        alt={project.title}
+                        loading="lazy"
+                        style={{
+                          width: '100%', height: '100%', objectFit: 'cover',
+                          transition: '0.5s',
+                        }}
+                        onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                      />
+                    </div>
+                    <div style={{ padding: 24 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                        <span className="tag">{project.category}</span>
+                        {project.featured && (
+                          <span style={{ fontSize: '0.72rem', color: 'var(--success)', fontWeight: 600 }}>
+                            Featured
+                          </span>
+                        )}
+                      </div>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 8 }}>
+                        {project.title}
+                      </h3>
+                      <p style={{
+                        color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.6,
+                        marginBottom: 16,
+                        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                      }}>
+                        {project.description}
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {project.tech_stack.map((tech) => (
+                          <span key={tech} style={{
+                            padding: '3px 10px', fontSize: '0.72rem', borderRadius: 6,
+                            background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)',
+                          }}>
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {!loading && filtered.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

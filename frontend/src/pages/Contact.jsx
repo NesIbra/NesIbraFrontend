@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Mail, MapPin, Phone, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { api } from '../api/client';
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
@@ -26,12 +27,18 @@ export default function Contact() {
     if (Object.keys(errs).length > 0) return;
 
     setLoading(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    setSubmitted(true);
-    toast.success('Message sent successfully!');
-    setForm({ name: '', email: '', message: '' });
+
+    try {
+      await api.submitContact(form);
+      setSubmitted(true);
+      toast.success('Message sent successfully!');
+      setForm({ name: '', email: '', message: '' });
+    } catch (error) {
+      console.error('Failed to submit contact form:', error);
+      toast.error(error.message || 'Failed to send message');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputStyle = (field) => ({

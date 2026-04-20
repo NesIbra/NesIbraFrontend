@@ -1,13 +1,70 @@
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, User } from 'lucide-react';
-import { articles } from '../data/mockData';
+import { api } from '../api/client';
 
 export default function ArticleDetail() {
   const { id } = useParams();
-  const article = articles.find((a) => a.id === id);
+  const [state, setState] = useState({
+    article: null,
+    loading: true,
+    notFound: false,
+    requestedId: id,
+  });
 
-  if (!article) {
+  useEffect(() => {
+    let active = true;
+
+    api.getArticle(id)
+      .then((data) => {
+        if (!active) return;
+
+        setState({
+          article: data,
+          loading: false,
+          notFound: false,
+          requestedId: id,
+        });
+      })
+      .catch((error) => {
+        if (!active) return;
+
+        if (error.message === 'Article not found') {
+          setState({
+            article: null,
+            loading: false,
+            notFound: true,
+            requestedId: id,
+          });
+          return;
+        }
+
+        console.error('Failed to load article:', error);
+        setState({
+          article: null,
+          loading: false,
+          notFound: false,
+          requestedId: id,
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  if (state.requestedId !== id || state.loading) {
+    return (
+      <div className="page-header" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="container" style={{ textAlign: 'center' }}>
+          <h1 className="section-title">Loading Article</h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (state.notFound || !state.article) {
     return (
       <div className="page-header" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="container" style={{ textAlign: 'center' }}>
@@ -19,6 +76,8 @@ export default function ArticleDetail() {
       </div>
     );
   }
+
+  const { article } = state;
 
   // Simple markdown-like rendering
   const renderContent = (content) => {

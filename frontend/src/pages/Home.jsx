@@ -1,10 +1,12 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowRight, Code, Smartphone, Brain, Cloud, Shield, BarChart3,
   CheckCircle, Zap, Users, Rocket
 } from 'lucide-react';
-import { projects, services, developers } from '../data/mockData';
+import { services } from '../data/mockData';
+import { api } from '../api/client';
 
 const iconMap = { Code, Smartphone, Brain, Cloud, Shield, BarChart3 };
 
@@ -16,15 +18,38 @@ const fadeUp = {
   }),
 };
 
-const stats = [
-  { icon: Rocket, value: '50+', label: 'Projects Delivered' },
-  { icon: Users, value: '30+', label: 'Happy Clients' },
-  { icon: Zap, value: '6+', label: 'Team Members' },
-  { icon: CheckCircle, value: '99%', label: 'Client Satisfaction' },
-];
-
 export default function Home() {
-  const featuredProjects = projects.filter((p) => p.featured).slice(0, 3);
+  const [featuredProjects, setFeaturedProjects] = useState([]);
+  const [teamCount, setTeamCount] = useState('0');
+
+  useEffect(() => {
+    let active = true;
+
+    Promise.all([
+      api.getProjects({ featured: true }),
+      api.getDevelopers(),
+    ])
+      .then(([projectsData, developersData]) => {
+        if (!active) return;
+
+        setFeaturedProjects(projectsData.slice(0, 3));
+        setTeamCount(`${developersData.length}+`);
+      })
+      .catch((error) => {
+        console.error('Failed to load homepage data:', error);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const stats = [
+    { icon: Rocket, value: '50+', label: 'Projects Delivered' },
+    { icon: Users, value: '30+', label: 'Happy Clients' },
+    { icon: Zap, value: teamCount, label: 'Team Members' },
+    { icon: CheckCircle, value: '99%', label: 'Client Satisfaction' },
+  ];
 
   return (
     <>
@@ -297,6 +322,12 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
+
+          {featuredProjects.length === 0 && (
+            <div className="glass-card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-secondary)' }}>
+              Featured projects will appear here once the backend has project data.
+            </div>
+          )}
         </div>
       </section>
 
